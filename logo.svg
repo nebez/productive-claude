@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#1e1e36"/>
+      <stop offset="100%" stop-color="#0c0c18"/>
+    </radialGradient>
+
+    <linearGradient id="arc-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="55%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+
+    <filter id="arc-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="needle-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="hub-glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer bezel -->
+  <circle cx="256" cy="256" r="252" fill="#080810"/>
+  <circle cx="256" cy="256" r="250" fill="url(#bg)" stroke="#2a2a48" stroke-width="1.5"/>
+
+  <!-- Subtle inner ring -->
+  <circle cx="256" cy="256" r="228" fill="none" stroke="#ffffff06" stroke-width="0.5"/>
+
+  <!-- Subtle highlight on upper face -->
+  <ellipse cx="256" cy="195" rx="150" ry="90" fill="#ffffff03"/>
+
+  <!-- Inactive arc track — 48° from 342° to 30° -->
+  <path d="M 417.69,203.47 A 170,170 0 0,1 403.22,341"
+        stroke="#ffffff0d" stroke-width="22" stroke-linecap="round" fill="none"/>
+
+  <!-- Active arc — 192° from 150° to 342° -->
+  <path d="M 108.78,341 A 170,170 0 1,1 417.69,203.47"
+        stroke="url(#arc-grad)" stroke-width="22" stroke-linecap="round" fill="none"
+        filter="url(#arc-glow)"/>
+
+  <!-- Needle — tapered triangle, drawn pointing up then rotated 72° to 342° -->
+  <g filter="url(#needle-glow)">
+    <g transform="rotate(72, 256, 256)">
+      <polygon points="256,120 252,246 260,246" fill="#fbbf24"/>
+    </g>
+  </g>
+
+  <!-- Center hub -->
+  <circle cx="256" cy="256" r="11" fill="#13131f" stroke="#f97316" stroke-width="2.5" filter="url(#hub-glow)"/>
+  <circle cx="256" cy="256" r="4.5" fill="#fbbf24"/>
+
+  <!-- Label -->
+  <text x="256" y="318" text-anchor="middle"
+        font-family="'SF Mono','Fira Code','JetBrains Mono','Consolas',monospace"
+        font-size="24" font-weight="600" letter-spacing="6"
+        fill="#ffffff40">ctx</text>
+</svg>
