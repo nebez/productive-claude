@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "${SOURCE}" ]]; do
+  DIR="$(cd -P "$(dirname "${SOURCE}")" && pwd)"
+  SOURCE="$(readlink "${SOURCE}")"
+  [[ "${SOURCE}" != /* ]] && SOURCE="${DIR}/${SOURCE}"
+done
+ROOT="$(cd -P "$(dirname "${SOURCE}")/.." && pwd)"
+# shellcheck source=../lib/claude-otel-env.sh
+source "${ROOT}/lib/claude-otel-env.sh"
+
+unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_BASE_URL
+unset ANTHROPIC_BEDROCK_BASE_URL CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_SKIP_BEDROCK_AUTH
+unset CLAUDE_CONFIG_DIR
+
+warn_if_otel_down
+exec "$(resolve_claude_bin)" "$@"

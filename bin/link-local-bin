@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "${SOURCE}" ]]; do
+  DIR="$(cd -P "$(dirname "${SOURCE}")" && pwd)"
+  SOURCE="$(readlink "${SOURCE}")"
+  [[ "${SOURCE}" != /* ]] && SOURCE="${DIR}/${SOURCE}"
+done
+ROOT="$(cd -P "$(dirname "${SOURCE}")/.." && pwd)"
+# shellcheck source=../lib/common.sh
+source "${ROOT}/lib/common.sh"
+
+mkdir -p "${CC_OTEL_LOCAL_BIN_DIR}"
+
+for script in cclaude cbedrock; do
+  ln -sfn "${ROOT}/bin/${script}" "${CC_OTEL_LOCAL_BIN_DIR}/${script}"
+  echo "Linked ${CC_OTEL_LOCAL_BIN_DIR}/${script} -> ${ROOT}/bin/${script}"
+done

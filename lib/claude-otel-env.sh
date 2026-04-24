@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  echo "Source this file from a launcher script." >&2
+  exit 1
+fi
+
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
+
+mkdir -p "${CC_OTEL_BODIES_DIR}"
+
+export CLAUDE_CODE_ENABLE_TELEMETRY=1
+export CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1
+
+export OTEL_METRICS_EXPORTER=otlp
+export OTEL_LOGS_EXPORTER=otlp
+export OTEL_TRACES_EXPORTER=otlp
+
+export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+export OTEL_EXPORTER_OTLP_ENDPOINT="${OTEL_EXPORTER_OTLP_ENDPOINT:-http://127.0.0.1:4317}"
+
+export OTEL_LOG_USER_PROMPTS=1
+export OTEL_LOG_TOOL_DETAILS=1
+export OTEL_LOG_TOOL_CONTENT=1
+export OTEL_LOG_RAW_API_BODIES="file:${CC_OTEL_BODIES_DIR}"
+
+export OTEL_LOGS_EXPORT_INTERVAL="${OTEL_LOGS_EXPORT_INTERVAL:-1000}"
+export OTEL_METRIC_EXPORT_INTERVAL="${OTEL_METRIC_EXPORT_INTERVAL:-5000}"
