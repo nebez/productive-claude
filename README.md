@@ -1,6 +1,8 @@
 # productive-claude
 
-> A collection of scripts and tools for getting more out of [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
+A good context window is a good Claude. These are tools for squeezing more out of every token in [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — understanding what's eating your context, cutting what doesn't need to be there, and making room for what does.
+
+This isn't plug-and-play. These are tuning tools that require investment and understanding of how Claude Code manages context under the hood.
 
 ## Contents
 
