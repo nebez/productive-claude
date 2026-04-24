@@ -1,12 +1,12 @@
-# repo-skill-manager
+# 🎛️ repo-skill-manager
 
 Toggle Claude Code project-level skills on and off locally without touching git.
 
-## Problem
+## The Problem
 
 Teams share skills in `.claude/skills/` — checked into git, loaded into every Claude Code session. Each skill's name and description gets injected into the system prompt, costing tokens whether you use them or not. With 20+ skills, that's ~2,000 tokens of overhead per turn.
 
-## How it works
+## How It Works
 
 Uses `git skip-worktree` to let you empty SKILL.md files locally while git sees no changes. Disabling a skill empties its SKILL.md so Claude Code has nothing to load. Enabling restores the original content from HEAD.
 
@@ -38,7 +38,7 @@ chmod +x .claude/bin/skills
 .claude/bin/skills deinit                # undo everything, restore all files
 ```
 
-## After git pull
+## After `git pull`
 
 If teammates add new skills, they won't have skip-worktree set yet. Run `sync` to catch them:
 
@@ -46,12 +46,12 @@ If teammates add new skills, they won't have skip-worktree set yet. Run `sync` t
 .claude/bin/skills sync
 ```
 
-This sets skip-worktree on any new SKILL.md files and disables them.
+Sets skip-worktree on any new SKILL.md files and disables them.
 
-## How to undo
+## Uninstalling
 
 ```bash
 .claude/bin/skills deinit
 ```
 
-Restores all SKILL.md files to their git content and removes skip-worktree flags.
+Restores all SKILL.md files to their git content and removes skip-worktree flags. Clean slate.
