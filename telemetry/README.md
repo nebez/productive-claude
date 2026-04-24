@@ -33,15 +33,25 @@ Both launchers enable full OTEL export (logs, metrics, traces, prompts, tool con
 
 ```bash
 ./telemetry/bin/signoz-up      # start
-./telemetry/bin/signoz-down    # stop and delete volumes
+./telemetry/bin/signoz-down    # stop (preserves data)
 ./telemetry/bin/signoz-ps      # container status
 ./telemetry/bin/signoz-logs    # tail logs
 ```
 
 Containers use `restart: "no"` — they won't auto-start with Docker.
 
-## Cleanup
+## Uninstalling
 
-Raw API bodies land in `/tmp/otel/claude-otel-bodies` and can be removed with `rm -rf /tmp/otel`.
+To stop using the telemetry launchers, remove the symlinks:
 
-`./telemetry/bin/signoz-down` removes Docker volumes. To keep volumes across restarts, use `docker compose down` directly in `telemetry/signoz/docker/`.
+```bash
+rm ~/.local/bin/cclaude ~/.local/bin/cbedrock
+```
+
+To fully remove SigNoz (containers, volumes, and temp files):
+
+```bash
+./telemetry/bin/signoz-nuke
+```
+
+This will prompt for confirmation before deleting Docker volumes and the `/tmp/otel/claude-otel-bodies` directory.
