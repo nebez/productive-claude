@@ -1,4 +1,4 @@
-# <img src="./logo.svg" width="32" height="32" alt=""> productive-claude
+# <img src="./logo.svg" width="50" height="50" alt=""> productive-claude
 
 A good context window is a good Claude. These are tools for squeezing more out of every token in [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — understanding what's eating your context, cutting what doesn't need to be there, and making room for what does.
 
