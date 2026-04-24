@@ -10,4 +10,4 @@ Local observability for Claude Code using SigNoz and OpenTelemetry. Captures log
 
 ### [repo-skill-manager](./repo-skill-manager/)
 
-Toggle project-level Claude Code skills on and off without touching git. Useful when your team has shared skills in `.claude/skills/` that add token overhead you don't always need.
+Manage Claude Code context on shared repos. Team skills in `.claude/skills/` are loaded into every session — each skill's name and description gets injected into the system prompt, adding ~2,000 tokens of overhead with 20+ skills. This tool lets you toggle them on and off locally without affecting git, so you only pay for the skills you're actively using.
