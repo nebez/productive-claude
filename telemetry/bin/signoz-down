@@ -20,4 +20,4 @@ if [[ ! -f "${CC_OTEL_SIGNOZ_DEPLOY_DIR}/docker-compose.yaml" ]]; then
 fi
 
 cd "${CC_OTEL_SIGNOZ_DEPLOY_DIR}"
-exec docker compose down --remove-orphans --volumes
+exec docker compose down --remove-orphans

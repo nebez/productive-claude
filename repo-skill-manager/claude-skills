@@ -1,0 +1,185 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# claude-skills — manage Claude Code project skills without touching git
+# https://github.com/nebez/productive-claude/tree/main/repo-skill-manager
+
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "Not in a git repo"; exit 1; }
+SKILLS_DIR="$REPO_ROOT/.claude/skills"
+
+usage() {
+  cat <<EOF
+claude-skills — toggle Claude Code project skills on/off locally
+
+Usage: claude-skills <command> [skill-name]
+
+Commands:
+  init          Set up skip-worktree on all SKILL.md files (run once per clone)
+  deinit        Undo init — restore all files and remove skip-worktree
+  list          Show all skills and their status
+  enable NAME   Restore a skill's SKILL.md from git
+  disable NAME  Empty a skill's SKILL.md locally
+  enable-all    Restore all skills
+  disable-all   Empty all skills
+  sync          Pick up new skills added by the team (sets skip-worktree + disables)
+
+How it works:
+  git skip-worktree lets you modify tracked files locally without git noticing.
+  Disabling a skill empties its SKILL.md so Claude Code has nothing to load.
+  Enabling restores the original content from HEAD.
+
+Install:
+  1. Copy this script to .claude/bin/skills (or anywhere gitignored)
+  2. chmod +x .claude/bin/skills
+  3. Run: .claude/bin/skills init
+EOF
+  exit 1
+}
+
+# --- helpers ---
+
+has_skills() {
+  [[ -d "$SKILLS_DIR" ]] && compgen -G "$SKILLS_DIR"/*/SKILL.md >/dev/null 2>&1
+}
+
+skill_files() {
+  git -C "$REPO_ROOT" ls-files --full-name ".claude/skills/*/SKILL.md" 2>/dev/null
+}
+
+untracked_skill_files() {
+  # SKILL.md files on disk that aren't tracked by git (new team additions)
+  for dir in "$SKILLS_DIR"/*/; do
+    local name="$(basename "$dir")"
+    local file=".claude/skills/$name/SKILL.md"
+    [[ -f "$REPO_ROOT/$file" ]] || continue
+    git -C "$REPO_ROOT" ls-files --error-unmatch "$file" &>/dev/null || echo "$file"
+  done
+}
+
+is_skip_worktree() {
+  git -C "$REPO_ROOT" ls-files -v "$1" 2>/dev/null | grep -q "^S "
+}
+
+skill_exists() {
+  [[ -d "$SKILLS_DIR/$1" && -f "$SKILLS_DIR/$1/SKILL.md" ]] || {
+    echo "Unknown skill: $1"
+    echo ""
+    list_skills
+    exit 1
+  }
+}
+
+is_enabled() {
+  [[ -s "$SKILLS_DIR/$1/SKILL.md" ]]
+}
+
+ensure_skip_worktree() {
+  local file=".claude/skills/$1/SKILL.md"
+  is_skip_worktree "$file" || git -C "$REPO_ROOT" update-index --skip-worktree "$file" 2>/dev/null
+}
+
+# --- commands ---
+
+cmd_init() {
+  has_skills || { echo "No skills found in $SKILLS_DIR"; exit 1; }
+
+  local count=0
+  while IFS= read -r file; do
+    if ! is_skip_worktree "$file"; then
+      git -C "$REPO_ROOT" update-index --skip-worktree "$file"
+      ((count++))
+    fi
+  done <<< "$(skill_files)"
+
+  if [[ $count -eq 0 ]]; then
+    echo "Already initialized — all SKILL.md files have skip-worktree set"
+  else
+    echo "Initialized: set skip-worktree on $count SKILL.md files"
+    echo "Run 'claude-skills disable-all' to suppress them from your prompt"
+  fi
+}
+
+cmd_deinit() {
+  has_skills || { echo "No skills found in $SKILLS_DIR"; exit 1; }
+
+  while IFS= read -r file; do
+    git -C "$REPO_ROOT" update-index --no-skip-worktree "$file" 2>/dev/null || true
+  done <<< "$(skill_files)"
+
+  git -C "$REPO_ROOT" checkout -- .claude/skills/ 2>/dev/null || true
+  echo "Restored all skills and removed skip-worktree"
+}
+
+list_skills() {
+  has_skills || { echo "No skills found in $SKILLS_DIR"; exit 0; }
+
+  printf "%-40s %s\n" "SKILL" "STATUS"
+  printf "%-40s %s\n" "-----" "------"
+  for dir in "$SKILLS_DIR"/*/; do
+    local name="$(basename "$dir")"
+    [[ -f "$dir/SKILL.md" ]] || continue
+    if is_enabled "$name"; then
+      printf "%-40s \033[32menabled\033[0m\n" "$name"
+    else
+      printf "%-40s \033[2mdisabled\033[0m\n" "$name"
+    fi
+  done
+}
+
+enable_skill() {
+  skill_exists "$1"
+  ensure_skip_worktree "$1"
+  git -C "$REPO_ROOT" show "HEAD:.claude/skills/$1/SKILL.md" > "$SKILLS_DIR/$1/SKILL.md" 2>/dev/null
+  echo "Enabled: $1"
+}
+
+disable_skill() {
+  skill_exists "$1"
+  ensure_skip_worktree "$1"
+  : > "$SKILLS_DIR/$1/SKILL.md"
+  echo "Disabled: $1"
+}
+
+cmd_sync() {
+  has_skills || { echo "No skills found in $SKILLS_DIR"; exit 0; }
+
+  local count=0
+  while IFS= read -r file; do
+    if ! is_skip_worktree "$file"; then
+      git -C "$REPO_ROOT" update-index --skip-worktree "$file"
+      local name="$(echo "$file" | sed 's|.claude/skills/||;s|/SKILL.md||')"
+      : > "$REPO_ROOT/$file"
+      echo "New skill found and disabled: $name"
+      ((count++))
+    fi
+  done <<< "$(skill_files)"
+
+  [[ $count -eq 0 ]] && echo "Already in sync — no new skills found"
+}
+
+# --- main ---
+
+[[ $# -ge 1 ]] || usage
+
+case "$1" in
+  init)       cmd_init ;;
+  deinit)     cmd_deinit ;;
+  list)       list_skills ;;
+  sync)       cmd_sync ;;
+  enable)     [[ $# -ge 2 ]] || usage; enable_skill "$2" ;;
+  disable)    [[ $# -ge 2 ]] || usage; disable_skill "$2" ;;
+  enable-all)
+    for dir in "$SKILLS_DIR"/*/; do
+      name="$(basename "$dir")"
+      [[ -f "$dir/SKILL.md" ]] || continue
+      enable_skill "$name"
+    done ;;
+  disable-all)
+    for dir in "$SKILLS_DIR"/*/; do
+      name="$(basename "$dir")"
+      [[ -f "$dir/SKILL.md" ]] || continue
+      disable_skill "$name"
+    done ;;
+  -h|--help|help) usage ;;
+  *) usage ;;
+esac

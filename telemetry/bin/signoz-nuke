@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "${SOURCE}" ]]; do
+  DIR="$(cd -P "$(dirname "${SOURCE}")" && pwd)"
+  SOURCE="$(readlink "${SOURCE}")"
+  [[ "${SOURCE}" != /* ]] && SOURCE="${DIR}/${SOURCE}"
+done
+ROOT="$(cd -P "$(dirname "${SOURCE}")/.." && pwd)"
+# shellcheck source=../lib/common.sh
+source "${ROOT}/lib/common.sh"
+
+require_command docker
+
+if [[ ! -f "${CC_OTEL_SIGNOZ_DEPLOY_DIR}/docker-compose.yaml" ]]; then
+  echo "Missing SigNoz compose file at ${CC_OTEL_SIGNOZ_DEPLOY_DIR}/docker-compose.yaml." >&2
+  exit 1
+fi
+
+echo "This will stop all SigNoz containers, remove volumes, and delete temp files."
+echo "  Volumes: signoz-clickhouse, signoz-sqlite, signoz-zookeeper-1"
+echo "  Temp dir: ${CC_OTEL_BODIES_DIR}"
+echo ""
+read -r -p "Continue? [y/N] " confirm
+if [[ "${confirm}" != [yY] ]]; then
+  echo "Aborted."
+  exit 0
+fi
+
+cd "${CC_OTEL_SIGNOZ_DEPLOY_DIR}"
+
+echo "Stopping containers and removing volumes..."
+docker compose down --remove-orphans --volumes
+
+if [[ -d "${CC_OTEL_BODIES_DIR}" ]]; then
+  echo "Removing temp files at ${CC_OTEL_BODIES_DIR}..."
+  rm -rf "${CC_OTEL_BODIES_DIR}"
+fi
+
+echo "Done. SigNoz has been fully removed."
