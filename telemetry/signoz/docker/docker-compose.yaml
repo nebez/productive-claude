@@ -124,7 +124,7 @@ services:
       - SIGNOZ_IDENTN_APIKEY_ENABLED=false
       - SIGNOZ_USER_ROOT_ENABLED=true
       - SIGNOZ_USER_ROOT_EMAIL=root@local.dev
-      - SIGNOZ_USER_ROOT_PASSWORD=root@local.dev
+      - SIGNOZ_USER_ROOT_PASSWORD=Root@Local123
     healthcheck:
       test:
         - CMD
