@@ -5,17 +5,27 @@
     <key>Label</key>
     <string>com.__USER__.claude-rc</string>
 
+    <!--
+      launchd starts agents with a bare environment (PATH=/usr/bin:/bin:...).
+      Run through a login + interactive shell so .zprofile and .zshrc are
+      sourced (brew, nvm, pnpm, .local/bin, etc.), then exec caffeinate so
+      KeepAlive tracks the real process with no lingering shell. This is what
+      gives the claude rc session — and every command it shells out to — the
+      same PATH and env as your terminal.
+    -->
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/bin/caffeinate</string>
-        <string>-i</string>
-        <string>-m</string>
-        <string>-s</string>
-        <string>__CLAUDE_BIN__</string>
-        <string>rc</string>
-        <string>--remote-control-session-name-prefix</string>
-        <string>rc-</string>
+        <string>__SHELL__</string>
+        <string>-lic</string>
+        <string>exec /usr/bin/caffeinate -i -m -s "__CLAUDE_BIN__" rc --remote-control-session-name-prefix rc-</string>
     </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <!-- unattended daemon: never block startup on an oh-my-zsh update prompt -->
+        <key>DISABLE_AUTO_UPDATE</key>
+        <string>true</string>
+    </dict>
 
     <key>KeepAlive</key>
     <true/>

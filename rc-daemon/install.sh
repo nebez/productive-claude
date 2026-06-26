@@ -44,8 +44,17 @@ if [[ ! -d "$WORKING_DIR" ]]; then
     exit 1
 fi
 
+# Run the daemon through the user's login shell so it inherits the same PATH
+# and environment as an interactive terminal (brew, nvm, pnpm, .local/bin).
+LOGIN_SHELL="${SHELL:-/bin/zsh}"
+if [[ ! -x "$LOGIN_SHELL" ]]; then
+    echo "error: login shell not executable at $LOGIN_SHELL"
+    exit 1
+fi
+
 sed \
     -e "s|__USER__|$(whoami)|g" \
+    -e "s|__SHELL__|$LOGIN_SHELL|g" \
     -e "s|__CLAUDE_BIN__|$CLAUDE_BIN|g" \
     -e "s|__WORKING_DIR__|$WORKING_DIR|g" \
     "$SCRIPT_DIR/com.claude-rc.plist.template" > "$PLIST_DEST"
@@ -55,6 +64,7 @@ launchctl load "$PLIST_DEST"
 
 echo "installed: $PLIST_DEST"
 echo "label:     $LABEL"
+echo "shell:     $LOGIN_SHELL"
 echo "binary:    $CLAUDE_BIN"
 echo "workdir:   $WORKING_DIR"
 echo ""
